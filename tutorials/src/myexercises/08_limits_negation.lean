@@ -22,19 +22,19 @@ variables (u : ℕ → ℝ) (f : ℝ → ℝ) (x₀ l : ℝ)
 /- Negation of "u tends to l" -/
 -- 0062
 example : ¬ (∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - l| ≤ ε) ↔
-sorry
+∃ ε > 0, ∀ N, ∃ n ≥ N, |u n - l| > ε 
 :=
 begin
-  sorry
+  check_me,
 end
 
 /- Negation of "f is continuous at x₀" -/
 -- 0063
 example : ¬ (∀ ε > 0, ∃ δ > 0, ∀ x, |x - x₀| ≤ δ →  |f x - f x₀| ≤ ε) ↔
-sorry
+∃ ε > 0, ∀ δ > 0, ∃ x, |x - x₀| ≤ δ ∧ |f x - f x₀| > ε
 :=
 begin
-  sorry
+  check_me,
 end
 
 /-
@@ -48,19 +48,19 @@ Also, `∃ x x', ...` is the abbreviation of `∃ x, ∃ x', ...`.
 /- Negation of "f is uniformly continuous on ℝ" -/
 -- 0064
 example : ¬ (∀ ε > 0, ∃ δ > 0, ∀ x x', |x' - x| ≤ δ →  |f x' - f x| ≤ ε) ↔
-sorry
+∃ ε > 0, ∀ δ > 0, ∃ x x', |x' - x| ≤ δ ∧ |f x' - f x| > ε
 :=
 begin
-  sorry
+  check_me,
 end
 
 /- Negation of "f is sequentially continuous at x₀" -/
 -- 0065
 example : ¬ (∀ u : ℕ → ℝ, (∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - x₀| ≤ ε) → (∀ ε > 0, ∃ N, ∀ n ≥ N, |(f ∘ u) n - f x₀| ≤ ε))  ↔
-sorry
+∃ u : ℕ → ℝ, (∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - x₀| ≤ ε) ∧ (∃ ε > 0, ∀ N, ∃ n ≥ N, |(f ∘ u) n - f x₀| > ε)
 :=
 begin
-  sorry
+  check_me,
 end
 end
 
@@ -85,7 +85,10 @@ def tendsto_infinity (u : ℕ → ℝ) := ∀ A, ∃ N, ∀ n ≥ N, u n ≥ A
 -- 0066
 example {u : ℕ → ℝ} : tendsto_infinity u → ∀ l, ¬ seq_limit u l :=
 begin
-  sorry
+  intros h l, unfold seq_limit, push_neg, use 1, split, linarith, intro N,
+  rcases h (l+2) with ⟨N', hN⟩, specialize hN (max N N'), specialize hN (le_max_right _ _),
+  use max N N', split, apply le_max_left, by_contradiction hyp, push_neg at hyp,
+  rw abs_le at hyp, cases hyp with h1 h2, linarith,
 end
 
 def nondecreasing_seq (u : ℕ → ℝ) := ∀ n m, n ≤ m → u n ≤ u m
@@ -94,7 +97,9 @@ def nondecreasing_seq (u : ℕ → ℝ) := ∀ n m, n ≤ m → u n ≤ u m
 example (u : ℕ → ℝ) (l : ℝ) (h : seq_limit u l) (h' : nondecreasing_seq u) :
   ∀ n, u n ≤ l :=
 begin
-  sorry
+  intro k, by_contradiction hyp, push_neg at hyp, specialize h ((u k - l)/2) (by linarith),
+  cases h with N h, specialize h (max N k) (le_max_left _ _),
+  specialize h' k (max N k) (le_max_right _ _), rw abs_le at h, cases h with h1 h2, linarith,
 end
 
 /-
@@ -127,7 +132,8 @@ but we won't need this.
 example {A : set ℝ} {x : ℝ} (hx : is_sup A x) :
 ∀ y, y < x → ∃ a ∈ A, y < a :=
 begin
-  sorry
+  intros y hy, by_contradiction hyp, push_neg at hyp, change upper_bound A y at hyp,
+  cases hx with h1 h2, specialize h2 y hyp, linarith,
 end
 
 /-
@@ -139,13 +145,15 @@ exercise below.
 lemma le_of_le_add_all' {x y : ℝ} :
   (∀ ε > 0, y ≤ x + ε) →  y ≤ x :=
 begin
-  sorry
+  intro h, by_contradiction hyp, push_neg at hyp, specialize h ((y-x)/2) (by linarith),
+  linarith,
 end
 
 -- 0070
 example {x y : ℝ} {u : ℕ → ℝ} (hu : seq_limit u x)
   (ineg : ∀ n, u n ≤ y) : x ≤ y :=
 begin
-  sorry
+  apply le_of_le_add_all', intros ε ε_pos, rcases hu ε ε_pos with ⟨N, hN⟩,
+  specialize hN N (by linarith), specialize ineg N, rw abs_le at hN, linarith,
 end
 

@@ -46,7 +46,7 @@ definition, in other circumstances it could be something proven inside Lean.
 /- For illustrative purposes, we now define an infix version of the above predicate.
 It will allow us to write `a is_a_max_of A`, which is closer to a sentence.
 -/
-infix ` is_a_max_of `:55 := is_maximum
+infix ` is_a_max_of `:55 := is_maximum -- QS: what is 55 here?
 
 /-
 Let's prove something now! A set of real numbers has at most one maximum. Here
@@ -157,7 +157,8 @@ begin
   intro h,
   -- `h` is exactly saying `y` is a lower bound of `A` so the second part of
   -- the infimum assumption `hx` applied to `y` and `h` is exactly what we want.
-  exact hx.2 y h
+  have j:= hx.2 y h,
+  exact j,
 end
 
 /-
@@ -190,7 +191,7 @@ end
 /-
 Note how `linarith` was used for both sub-goals at the end of the above proof.
 We could have shortened that using the semi-colon combinator instead of comma,
-writing `split ; linarith`.
+writing `split ; linarith`. NOTE: semicolon combinator
 
 Next we will study a compressed version of that proof:
 -/
@@ -245,7 +246,7 @@ begin
   -- positivity of `(y-x)/2` is proved by `linarith`
     y   ≤ x + (y-x)/2 : h _ (by linarith)
     ... = x/2 + y/2   : by ring
-    ... < y           : by linarith,
+    ... < y           : by linarith, -- NOTE VERY COOL
   -- our key now says `y < y` (notice how the sequence `≤`, `=`, `<` was correctly
   -- merged into a `<`). Let `linarith` find the desired contradiction now.
   linarith,
@@ -388,7 +389,7 @@ lemma inf_seq (A : set ℝ) (x : ℝ) :
 begin
   split,
   { intro h,
-    split,
+    split, 
     { exact h.1 },
     -- On the next line, we don't need to tell Lean to treat `n+1` as a real number because
     -- we add `x` to it, so Lean knows there is only one way to make sense of this expression.

@@ -42,7 +42,12 @@ Let's prove a variation (without invoking commutativity of addition since this w
 -- 0009
 example {a b : ℝ} (hab : a ≤ b) (c : ℝ) : a + c ≤ b + c :=
 begin
-  sorry
+  rw <- sub_nonneg,
+  have key : b+c - (a+c) = b-a,
+  { ring, },
+  rw key,
+  rw sub_nonneg,
+  exact hab,
 end
 
 
@@ -84,7 +89,8 @@ end
 -- 0010
 example (a b : ℝ) (hb : 0 ≤ b) : a ≤ a + b :=
 begin
-  sorry
+  calc a = a + 0 : by ring
+     ... ≤ a + b : add_le_add_left hb a,
 end
 
 /-
@@ -112,7 +118,8 @@ the pieces.
 -- 0011
 example (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b :=
 begin
-  sorry
+  calc 0 ≤ a : ha
+     ... ≤ a + b : le_add_of_nonneg_right hb,
 end
 
 /- And let's combine with our earlier lemmas. -/
@@ -120,7 +127,12 @@ end
 -- 0012
 example (a b c d : ℝ) (hab : a ≤ b) (hcd : c ≤ d) : a + c ≤ b + d :=
 begin
- sorry
+ have key : 0 ≤ d - c, rw sub_nonneg, exact hcd,
+ have key' : 0 ≤ b - a, rw sub_nonneg, exact hab,
+ calc a + c ≤ a + c + (d-c) : le_add_of_nonneg_right key
+        ... = a + d         : by ring
+        ... ≤ a + d + (b-a) : le_add_of_nonneg_right key'
+        ... = b + d         : by ring,
 end
 
 /-
@@ -221,21 +233,32 @@ Let's now practice all three styles using:
 -- 0013
 example (a b c : ℝ) (hc : c ≤ 0) (hab :  a ≤ b) : b*c ≤ a*c :=
 begin
-  sorry
+  rw ← sub_nonneg,
+  rw ← sub_mul,
+  apply mul_nonneg_of_nonpos_of_nonpos,
+  rw sub_nonpos, exact hab,
+  exact hc,
 end
 
 /- Using forward reasoning -/
 -- 0014
 example (a b c : ℝ) (hc : c ≤ 0) (hab :  a ≤ b) : b*c ≤ a*c :=
 begin
-  sorry
+  have key    : a - b ≤ 0, exact sub_nonpos.2 hab, 
+  have key'   : 0 ≤ (a - b)*c, exact mul_nonneg_of_nonpos_of_nonpos key hc,
+  have key''  : 0 ≤ a*c - b*c, rwa sub_mul at key',
+  have key''' : b*c ≤ a*c, rwa sub_nonneg at key'',
+  exact key''',
 end
 
 /-- Using a combination of both, with a `calc` block -/
 -- 0015
 example (a b c : ℝ) (hc : c ≤ 0) (hab :  a ≤ b) : b*c ≤ a*c :=
 begin
-  sorry
+    rw ← sub_nonneg,
+    have key : a-b ≤ 0, rw ← sub_nonpos at hab, exact hab,
+    calc a*c - b*c = (a-b)*c : by ring
+               ... ≥ 0 : by exact mul_nonneg_of_nonpos_of_nonpos key hc,
 end
 
 /-
@@ -278,7 +301,8 @@ Let's practise using `intros`. -/
 -- 0016
 example (a b : ℝ): 0 ≤ b → a ≤ a + b :=
 begin
-  sorry
+  intros hb,
+  exact le_add_of_nonneg_right hb,
 end
 
 
@@ -334,7 +358,11 @@ unspecified mathematical statements.
 -- 0017
 example (P Q R : Prop) : P ∧ Q → Q ∧ P :=
 begin
-  sorry
+  intros h,
+  cases h with hp hq,
+  split,
+  exact hq,
+  exact hp,
 end
 
 /-
@@ -367,7 +395,8 @@ Now redo the previous exercise using all those compressing techniques, in exactl
 -- 0018
 example (P Q R : Prop): P ∧ Q → Q ∧ P :=
 begin
-  sorry
+  rintros ⟨hp,hq⟩,
+  exact ⟨hq,hp⟩, 
 end
 
 /-
@@ -379,7 +408,11 @@ an equivalence into two implications.
 -- 0019
 example (P Q R : Prop) : (P ∧ Q → R) ↔ (P → (Q → R)) :=
 begin
-  sorry
+  split,
+  intros h hp hq,
+  exact h ⟨hp,hq⟩,
+  rintros h ⟨hp, hq⟩,
+  exact h hp hq,
 end
 
 /-
@@ -412,7 +445,7 @@ Now let's enjoy this for a while.
 -- 0020
 example (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b :=
 begin
-  sorry
+  linarith,
 end
 
 /- And let's combine with our earlier lemmas. -/
@@ -420,7 +453,7 @@ end
 -- 0021
 example (a b c d : ℝ) (hab : a ≤ b) (hcd : c ≤ d) : a + c ≤ b + d :=
 begin
-  sorry
+  linarith,
 end
 
 
@@ -447,6 +480,13 @@ open nat
 -- 0022
 example (a b : ℕ) : a ∣ b ↔ gcd a b = a :=
 begin
-  sorry
+  have m := dvd_gcd_iff.1 (dvd_refl (gcd a b)),
+  split,
+  intro h,
+  have j := dvd_refl a,
+  have k : a ∣ gcd a b, exact dvd_gcd_iff.2 ⟨j,h⟩,
+  have l : gcd a b ∣ a,  exact m.1,
+  exact dvd_antisymm l k,
+  intro h, rw h at m, exact m.2,
 end
 

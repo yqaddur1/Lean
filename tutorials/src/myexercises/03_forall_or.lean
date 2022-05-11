@@ -101,13 +101,18 @@ you can put your mouse cursor above the symbol and wait for one second.
 -- 0023
 example (f g : ℝ → ℝ) : even_fun f → even_fun (g ∘ f) :=
 begin
-  sorry
+  intro hf, intro x,
+  calc (g ∘ f) (-x) = g(f(-x)) : rfl
+                ... = g(f(x))  : by rw hf,
 end
 
 -- 0024
 example (f g : ℝ → ℝ) : odd_fun f → odd_fun g →  odd_fun (g ∘ f) :=
 begin
-  sorry
+  intros hf hg x,
+  calc (g∘f)(-x) = g (f(-x)) : rfl
+             ... = g(-f(x))  : by rw hf
+             ... = -g(f(x))  : by rw hg,
 end
 
 /-
@@ -195,7 +200,10 @@ end
 -- 0025
 example (f g : ℝ → ℝ) (hf : non_decreasing f) (hg : non_increasing g) : non_increasing (g ∘ f) :=
 begin
-  sorry
+  intros x₁ x₂ h,
+  apply hg,
+  apply hf,
+  exact h,
 end
 
 /-
@@ -236,7 +244,13 @@ end
 -- 0026
 example (x y : ℝ) : x^2 = y^2 → x = y ∨ x = -y :=
 begin
-  sorry
+  intro h,
+  have H : (x-y)*(x+y) = 0,
+  { calc (x-y)*(x+y) = x^2 - y^2 : by ring
+                ... = 0         : by linarith, },
+  rw mul_eq_zero at H,
+  cases H with sub pos,
+  left, linarith, right, linarith,
 end
 
 /-
@@ -247,7 +261,9 @@ In the next exercise, we can use:
 -- 0027
 example (f : ℝ → ℝ) : non_decreasing f ↔ ∀ x y, x < y → f x ≤ f y :=
 begin
-  sorry
+  split, intros h x y k, apply h, linarith,
+  intros h x y k, have j := eq_or_lt_of_le k,  
+  cases j with heq hl, rw heq, apply h, exact hl,
 end
 
 /-
@@ -258,6 +274,9 @@ In the next exercise, we can use:
 -- 0028
 example (f : ℝ → ℝ) (h : non_decreasing f) (h' : ∀ x, f (f x) = x) : ∀ x, f x = x :=
 begin
-  sorry
+  intro x, have j := le_total (f x) x,
+  cases j with k k,
+  specialize h (f x) x k, specialize h' x, rw h' at h, linarith,
+  specialize h x (f x) k, specialize h' x, rw h' at h, linarith,
 end
 

@@ -61,7 +61,8 @@ variables (u v w : ℕ → ℝ) (l l' : ℝ)
 -- 0033
 example : (∀ n, u n = l) → seq_limit u l :=
 begin
-  sorry
+  intro h, intros ε hε, use 0, intro n, intro k,
+  rw h n, norm_num, linarith,
 end
 
 /- When dealing with absolute values, we'll use lemmas:
@@ -80,7 +81,9 @@ hand since they are used in many exercises.
 -- 0034
 example (hl : l > 0) : seq_limit u l → ∃ N, ∀ n ≥ N, u n ≥ l/2 :=
 begin
-  sorry
+  intro h, unfold seq_limit at h, specialize h (l/2) (by linarith),
+  cases h with N hN, use N, intros n hn, specialize hN n hn,
+  have k := abs_le.1 hN, cases k with k1 k2, linarith,
 end
 
 /- 
@@ -151,8 +154,28 @@ example (hu : seq_limit u l) (hw : seq_limit w l)
 (h : ∀ n, u n ≤ v n)
 (h' : ∀ n, v n ≤ w n) : seq_limit v l :=
 begin
-  sorry
-
+  intros ε ε_pos,
+  cases hu (ε) (by linarith) with N₁ hN₁,
+  cases hw (ε) (by linarith) with N₂ hN₂,
+  use max N₁ N₂,
+  intros n hn,
+  rw ge_max_iff at hn,
+  specialize hN₁ n (by linarith),
+  specialize hN₂ n (by linarith),
+  specialize h n, specialize h' n,
+  rw abs_le at hN₁, rw abs_le at hN₂,
+  have key1 : -ε ≤ v n - l,
+  {
+    calc v n - l ≥ u n -l : by linarith
+             ... ≥ -ε   : by linarith,
+  },
+  have key2 : v n - l ≤ ε,
+  {
+    calc v n - l ≤ w n - l : by linarith
+             ... ≤ ε     : by linarith,
+  },
+  rw abs_le,
+  split, exact key1, exact key2,
 end
 
 /- What about < ε? -/
@@ -160,7 +183,14 @@ end
 example (u l) : seq_limit u l ↔
  ∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - l| < ε :=
 begin
-  sorry
+  split,
+  intros h ε ε_pos,
+  specialize h (ε/2) (by linarith),
+  cases h with N hN, use N, intros n hn,
+  specialize hN n hn,
+  linarith,
+  intros h ε ε_pos, specialize h ε ε_pos, cases h with N hN,
+  use N, intros n hn, specialize hN n hn, linarith,
 end
 
 /- In the next exercise, we'll use
@@ -172,7 +202,15 @@ eq_of_abs_sub_le_all (x y : ℝ) : (∀ ε > 0, |x - y| ≤ ε) → x = y
 -- 0037
 example : seq_limit u l → seq_limit u l' → l = l' :=
 begin
-  sorry
+  intros h h', apply eq_of_abs_sub_le_all, intros ε ε_pos,
+  specialize h (ε/2) (by linarith), specialize h' (ε/2) (by linarith),
+  cases h with N₁ hN₁, cases h' with N₂ hN₂,
+  specialize hN₁ (max N₁ N₂) (by linarith[le_max_left N₁ N₂]),
+  specialize hN₂ (max N₁ N₂) (by linarith[le_max_right N₁ N₂]),
+  rw abs_sub_comm at hN₁,
+  calc |l-l'| = |(l - u (max N₁ N₂)) + (u (max N₁ N₂) - l')|  : by ring_nf
+          ... ≤ |l - u (max N₁ N₂)| + |u (max N₁ N₂) - l'|    : by apply abs_add
+          ... ≤ ε                                             : by linarith,
 end
 
 /-
@@ -188,6 +226,15 @@ def is_seq_sup (M : ℝ) (u : ℕ → ℝ) :=
 example (M : ℝ) (h : is_seq_sup M u) (h' : non_decreasing u) :
 seq_limit u M :=
 begin
-  sorry
+  intros ε ε_pos,
+  cases h with hb he,
+  specialize he ε ε_pos, cases he with N hN, use N, intros n hn,
+  rw abs_le, split,
+  have key : u n ≥ u N, from h' N n hn,
+  calc u n - M ≥ u N - M : by linarith
+           ... ≥ -ε      : by linarith,
+  specialize hb n,
+  calc u n - M ≤ 0 : by linarith
+           ... ≤ ε : by linarith, 
 end
 
