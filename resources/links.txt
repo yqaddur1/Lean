@@ -1,0 +1,2 @@
+Lean Manual: https://leanprover.github.io/lean4/doc/whatIsLean.html
+Theorem Proving in Lean: https://leanprover.github.io/theorem_proving_in_lean4/
