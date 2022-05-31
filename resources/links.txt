@@ -1,2 +1,3 @@
 Lean Manual: https://leanprover.github.io/lean4/doc/whatIsLean.html
 Theorem Proving in Lean: https://leanprover.github.io/theorem_proving_in_lean4/
+Number Game: https://www.ma.imperial.ac.uk/~buzzard/xena/natural_number_game/
